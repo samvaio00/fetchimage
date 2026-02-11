@@ -66,7 +66,11 @@ def run_job(cfg):
             logger.info(f"Errors ({len(report.error_summary)}):")
             for error in report.error_summary[:10]:
                 logger.info(f"  {error}")
-        
+
+        if report.needs_review > 0:
+            logger.info(f"\nReport: {report.needs_review} SKUs needing review saved to reports/")
+            logger.info(f"  Check: reports/needs_review_*.txt")
+
         logger.info("="*60)
         
     except Exception as e:

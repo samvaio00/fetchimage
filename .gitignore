@@ -40,6 +40,11 @@ data/*.db
 data/*.db-journal
 logs/*.log
 
+# Reports
+reports/*.txt
+reports/*.csv
+!reports/.gitkeep
+
 # Testing
 .coverage
 htmlcov/

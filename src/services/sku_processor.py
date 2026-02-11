@@ -41,6 +41,9 @@ class SKUProcessor(LoggerMixin):
                     report.successful += 1
                     report.source_breakdown[result.image_source.value] = \
                         report.source_breakdown.get(result.image_source.value, 0) + 1
+                elif result.error and "No suitable image found" in result.error:
+                    report.needs_review += 1
+                    report.error_summary.append(f"{sku.id}: {result.error}")
                 elif result.error:
                     report.failed += 1
                     report.error_summary.append(f"{sku.id}: {result.error}")
@@ -53,7 +56,18 @@ class SKUProcessor(LoggerMixin):
             self.state_manager.update_execution_record(
                 execution_id, report.total, report.successful, report.failed, report.skipped
             )
-            
+
+            # Generate report file for SKUs needing manual review
+            if report.needs_review > 0:
+                from ..utils.report_writer import ReportWriter
+                reports_cfg = self.config.reports_config if hasattr(self.config, 'reports_config') else {}
+                output_dir = reports_cfg.get("output_dir", "./reports")
+
+                writer = ReportWriter(output_dir=output_dir)
+                needs_review_skus = self.state_manager.get_needs_review_skus()
+                report_path = writer.write_needs_review_report(needs_review_skus)
+                self.logger.info(f"Saved {len(needs_review_skus)} SKUs needing review to {report_path}")
+
             self.logger.info(f"Batch complete: {report.successful}/{report.total} successful")
             return report
             

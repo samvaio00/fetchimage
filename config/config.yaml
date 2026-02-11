@@ -61,6 +61,14 @@ state:
   retention_days: 30
   failed_retry_limit: 3
 
+reports:
+  enabled: true
+  output_dir: "./reports"
+  formats:
+    - txt
+  include_timestamp: true
+  retention_days: 30
+
 logging:
   level: "INFO"
   format: "json"

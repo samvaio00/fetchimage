@@ -151,6 +151,25 @@ class StateManager(LoggerMixin):
         conn.close()
         return [row["sku_id"] for row in results]
 
+    def get_needs_review_skus(self) -> List[ProcessingRecord]:
+        """Get all SKUs marked as needing manual review."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM processed_skus WHERE status = ? ORDER BY processed_at DESC",
+                      (ProcessingStatus.NEEDS_REVIEW.value,))
+        results = cursor.fetchall()
+        conn.close()
+
+        records = []
+        for row in results:
+            records.append(ProcessingRecord(
+                id=row["id"], sku_id=row["sku_id"], status=ProcessingStatus(row["status"]),
+                image_source=ImageSource(row["image_source"]) if row["image_source"] else None,
+                image_url=row["image_url"], relevance_score=row["relevance_score"],
+                processed_at=datetime.fromisoformat(row["processed_at"]), attempts=row["attempts"],
+                last_error=row["last_error"], created_at=datetime.fromisoformat(row["created_at"])))
+        return records
+
     def get_processing_stats(self) -> dict:
         """Get processing statistics."""
         conn = self._get_connection()

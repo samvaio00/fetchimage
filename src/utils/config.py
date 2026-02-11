@@ -130,6 +130,17 @@ class Config:
         """Get allowed image formats."""
         return self.validation_config.get("allowed_formats", ["JPEG", "PNG", "WebP"])
 
+    @property
+    def reports_config(self) -> Dict:
+        """Get reports configuration."""
+        return self.yaml_config.get("reports", {
+            "enabled": True,
+            "output_dir": "./reports",
+            "formats": ["txt"],
+            "include_timestamp": True,
+            "retention_days": 30
+        })
+
     def get_api_key(self, source: str) -> Optional[str]:
         """Get API key for a specific source.
 
