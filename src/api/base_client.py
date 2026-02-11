@@ -4,7 +4,7 @@ import time
 from typing import Any, Dict, Optional
 import requests
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from ..utils.logger import LoggerMixin
+from src.utils.logger import LoggerMixin
 
 
 class BaseAPIClient(LoggerMixin):

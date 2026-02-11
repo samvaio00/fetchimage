@@ -1,12 +1,12 @@
 """Multi-source image search with relevance scoring."""
 
 from typing import List, Optional
-from ..api.freepik_client import FreepikClient
-from ..api.pexels_client import PexelsClient
-from ..api.pixabay_client import PixabayClient
-from ..storage.models import ImageResult, ImageSource
-from ..utils.logger import LoggerMixin
-from ..utils.config import Config
+from src.api.freepik_client import FreepikClient
+from src.api.pexels_client import PexelsClient
+from src.api.pixabay_client import PixabayClient
+from src.storage.models import ImageResult, ImageSource
+from src.utils.logger import LoggerMixin
+from src.utils.config import Config
 
 
 class ImageSearchService(LoggerMixin):

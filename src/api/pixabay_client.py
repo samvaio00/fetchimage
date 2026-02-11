@@ -1,8 +1,8 @@
 """Pixabay API client."""
 
 from typing import List
-from .base_client import BaseAPIClient
-from ..storage.models import ImageResult, ImageSource
+from src.api.base_client import BaseAPIClient
+from src.storage.models import ImageResult, ImageSource
 
 
 class PixabayClient(BaseAPIClient):

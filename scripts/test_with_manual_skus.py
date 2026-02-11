@@ -20,14 +20,14 @@ import sys
 import argparse
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+# Add project root to path to enable absolute imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from utils.config import Config
-from utils.logger import setup_logging
-from storage.state_manager import StateManager
-from storage.models import SKU, ProcessingStatus
-from services.sku_processor import SKUProcessor
+from src.utils.config import Config
+from src.utils.logger import setup_logging
+from src.storage.state_manager import StateManager
+from src.storage.models import SKU, ProcessingStatus
+from src.services.sku_processor import SKUProcessor
 import logging
 
 
@@ -160,7 +160,7 @@ def main():
         sku_ids_to_process = all_sku_ids[:args.limit]
         skipped_count = 0
     else:
-        state_manager = StateManager(config)
+        state_manager = StateManager(config.env.database_path)
         sku_ids_to_process, skipped_count = filter_already_processed(
             all_sku_ids, 
             state_manager, 
@@ -198,7 +198,7 @@ def main():
     if skipped_count > 0:
         print(f"Already processed: {skipped_count}")
     print(f"SKUs to process: {len(test_skus)}")
-    print(f"Image sources: Unsplash → Pexels → Pixabay")
+    print(f"Image sources: Freepik → Pexels → Pixabay")
     print("="*60 + "\n")
     
     try:
@@ -214,7 +214,7 @@ def main():
             logger.info(f"Processing SKU {i}/{len(test_skus)}: {sku.sku}")
             logger.info(f"{'='*60}")
             
-            result = processor.process_single_sku(sku)
+            result = processor.process_single_sku(sku.sku, sku.name or sku.sku)
             
             if result.success:
                 success_count += 1

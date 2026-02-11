@@ -2,8 +2,8 @@
 
 from typing import List, Optional
 import requests
-from ..storage.models import SKU
-from ..utils.logger import LoggerMixin
+from src.storage.models import SKU
+from src.utils.logger import LoggerMixin
 
 
 class ReplitClient(LoggerMixin):

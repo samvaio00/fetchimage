@@ -2,7 +2,7 @@
 
 import re
 from typing import List
-from ..utils.logger import LoggerMixin
+from src.utils.logger import LoggerMixin
 
 
 class KeywordExtractor(LoggerMixin):

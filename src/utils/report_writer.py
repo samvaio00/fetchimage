@@ -4,8 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-from ..storage.models import ProcessingRecord
-from .logger import LoggerMixin
+from src.storage.models import ProcessingRecord
+from src.utils.logger import LoggerMixin
 
 
 class ReportWriter(LoggerMixin):

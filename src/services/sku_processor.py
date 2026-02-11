@@ -2,14 +2,14 @@
 
 import time
 from typing import List
-from ..api.replit_client import ReplitClient
-from ..storage.state_manager import StateManager
-from ..storage.models import ProcessingStatus, ProcessingResult, ProcessingReport
-from .keyword_extractor import KeywordExtractor
-from .image_validator import ImageValidator
-from .image_search_service import ImageSearchService
-from ..utils.logger import LoggerMixin
-from ..utils.config import Config
+from src.api.replit_client import ReplitClient
+from src.storage.state_manager import StateManager
+from src.storage.models import ProcessingStatus, ProcessingResult, ProcessingReport
+from src.services.keyword_extractor import KeywordExtractor
+from src.services.image_validator import ImageValidator
+from src.services.image_search_service import ImageSearchService
+from src.utils.logger import LoggerMixin
+from src.utils.config import Config
 
 
 class SKUProcessor(LoggerMixin):
@@ -63,7 +63,7 @@ class SKUProcessor(LoggerMixin):
 
             # Generate report file for SKUs needing manual review
             if report.needs_review > 0:
-                from ..utils.report_writer import ReportWriter
+                from src.utils.report_writer import ReportWriter
                 reports_cfg = self.config.reports_config if hasattr(self.config, 'reports_config') else {}
                 output_dir = reports_cfg.get("output_dir", "./reports")
 

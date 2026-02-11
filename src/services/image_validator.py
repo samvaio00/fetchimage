@@ -3,8 +3,8 @@
 from io import BytesIO
 from typing import List
 from PIL import Image
-from ..storage.models import ValidationResult
-from ..utils.logger import LoggerMixin
+from src.storage.models import ValidationResult
+from src.utils.logger import LoggerMixin
 
 
 class ImageValidator(LoggerMixin):
