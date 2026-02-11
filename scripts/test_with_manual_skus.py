@@ -20,6 +20,12 @@ import sys
 import argparse
 from pathlib import Path
 
+# Set console encoding for Windows
+if sys.platform == "win32":
+    import codecs
+    sys.stdout = codecs.getwriter("utf-8")(sys.stdout.buffer, errors="replace")
+    sys.stderr = codecs.getwriter("utf-8")(sys.stderr.buffer, errors="replace")
+
 # Add project root to path to enable absolute imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -143,7 +149,7 @@ def main():
         sys.exit(1)
     
     # Set up logging
-    setup_logging(config)
+    setup_logging("config/logging.yaml")
     logger = logging.getLogger(__name__)
     
     # Parse SKU list
@@ -183,7 +189,6 @@ def main():
     test_skus = [
         SKU(
             id=sku_id,
-            sku=sku_id,
             name=f"Product {sku_id}",  # Placeholder - will use SKU for keyword extraction
             description=None
         )
@@ -198,7 +203,7 @@ def main():
     if skipped_count > 0:
         print(f"Already processed: {skipped_count}")
     print(f"SKUs to process: {len(test_skus)}")
-    print(f"Image sources: Freepik → Pexels → Pixabay")
+    print("Image sources: Freepik -> Pexels -> Pixabay")
     print("="*60 + "\n")
     
     try:
@@ -211,23 +216,23 @@ def main():
         # Process each SKU individually for better visibility
         for i, sku in enumerate(test_skus, 1):
             logger.info(f"\n{'='*60}")
-            logger.info(f"Processing SKU {i}/{len(test_skus)}: {sku.sku}")
+            logger.info(f"Processing SKU {i}/{len(test_skus)}: {sku.id}")
             logger.info(f"{'='*60}")
-            
-            result = processor.process_single_sku(sku.sku, sku.name or sku.sku)
+
+            result = processor.process_single_sku(sku.id, sku.name or sku.id)
             
             if result.success:
                 success_count += 1
-                logger.info(f"✅ SUCCESS: Image attached for {sku.sku}")
+                logger.info(f"✅ SUCCESS: Image attached for {sku.id}")
                 logger.info(f"   Source: {result.image_source}")
                 logger.info(f"   Relevance: {result.relevance_score:.2f}")
             elif result.error and "No suitable image found" in result.error:
                 needs_review_count += 1
-                logger.warning(f"⚠️  NEEDS REVIEW: {sku.sku}")
+                logger.warning(f"⚠️  NEEDS REVIEW: {sku.id}")
                 logger.warning(f"   No suitable image found")
             else:
                 failed_count += 1
-                logger.error(f"❌ FAILED: {sku.sku}")
+                logger.error(f"❌ FAILED: {sku.id}")
                 logger.error(f"   Error: {result.error}")
         
         # Print summary
