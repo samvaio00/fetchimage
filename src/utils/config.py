@@ -12,9 +12,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppConfig(BaseSettings):
     """Application configuration from environment variables."""
 
-    # Replit API
+    # Replit WholesaleHub API (session-based auth)
     replit_api_url: str = Field(..., alias="REPLIT_API_URL")
-    replit_api_key: str = Field(..., alias="REPLIT_API_KEY")
+    replit_email: str = Field(..., alias="REPLIT_EMAIL")
+    replit_password: str = Field(..., alias="REPLIT_PASSWORD")
 
     # Image Source APIs
     unsplash_access_key: Optional[str] = Field(None, alias="UNSPLASH_ACCESS_KEY")

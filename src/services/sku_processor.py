@@ -18,7 +18,11 @@ class SKUProcessor(LoggerMixin):
     def __init__(self, config: Config):
         """Initialize SKU processor."""
         self.config = config
-        self.replit_client = ReplitClient(config.env.replit_api_url, config.env.replit_api_key)
+        self.replit_client = ReplitClient(
+            config.env.replit_api_url,
+            config.env.replit_email,
+            config.env.replit_password
+        )
         self.state_manager = StateManager(config.env.database_path)
         self.keyword_extractor = KeywordExtractor(**config.keywords_config)
         self.image_validator = ImageValidator(**config.validation_config)
@@ -101,7 +105,11 @@ class SKUProcessor(LoggerMixin):
                 return ProcessingResult(sku_id=sku_id, success=False, error=error,
                                        processing_time=time.time() - start_time)
             
-            image_data = self.replit_client.download_file(image_result.download_url)
+            # Download image from the source (Unsplash, Pexels, etc.)
+            import requests
+            response = requests.get(image_result.download_url, timeout=30)
+            response.raise_for_status()
+            image_data = response.content
             
             validation = self.image_validator.validate_image(image_data)
             if not validation.is_valid:
