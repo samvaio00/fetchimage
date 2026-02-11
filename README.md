@@ -1,14 +1,16 @@
 # Image Fetcher Bot 🤖
 
-Autonomous bot that fetches and attaches images to product SKUs in your Replit app using multiple free image sources.
+Autonomous bot that attaches product images to SKUs in your Replit WholesaleHub app. Supports both **local image matching** and **API-based image search**.
 
 ## Features
 
-- **Multi-Source Image Search**: Searches Unsplash, Pexels, and Pixabay APIs with intelligent fallback
+- **🆕 Local Image Matching**: Match images by SKU filename (filename = SKU code)
+- **Multi-Source API Search**: Searches Unsplash, Pexels, and Pixabay with intelligent fallback
 - **Smart Keyword Extraction**: Automatically extracts searchable keywords from SKU names
 - **Relevance Scoring**: Scores images based on keyword match, quality, and source priority
 - **Image Validation**: Validates format, dimensions, file size before uploading
 - **State Persistence**: Tracks processed SKUs to avoid reprocessing
+- **Duplicate Prevention**: Skips already-uploaded SKUs automatically
 - **Scheduled Execution**: Runs autonomously on configurable schedule (default: every 6 hours)
 - **Comprehensive Logging**: JSON-formatted logs with rotation
 - **Error Recovery**: Retry logic with exponential backoff for transient failures
@@ -26,25 +28,47 @@ Scheduler → SKU Processor → Image Search Service → [Unsplash/Pexels/Pixaba
 ## Prerequisites
 
 - Python 3.8+
-- API Keys:
-  - **Replit App API** key and URL
+- **Replit WholesaleHub** credentials (email + password)
+- **Optional** - API Keys (only if using API search mode):
   - **Unsplash** Access Key ([Get it here](https://unsplash.com/developers))
   - **Pexels** API Key ([Get it here](https://www.pexels.com/api/))
   - **Pixabay** API Key ([Get it here](https://pixabay.com/api/docs/))
 
+## Modes of Operation
+
+### 🆕 Local Images Mode (Recommended)
+- Place product images in `./images/` folder
+- Filename (without extension) must match SKU code
+- No API keys required
+- 100% accurate matching
+
+### API Search Mode
+- Searches Unsplash, Pexels, Pixabay for images
+- Uses keyword extraction from SKU names
+- Requires API keys
+- May not always match the actual product
+
 ## Installation
 
-### 1. Clone or Download
+### 1. Clone Repository
 
 ```bash
-cd C:\Users\Samva\projects\imagefetcher
+git clone https://github.com/samvaio00/fetchimage.git
+cd fetchimage
 ```
 
 ### 2. Create Virtual Environment
 
+**Windows:**
 ```bash
 python -m venv venv
 venv\Scripts\activate
+```
+
+**Linux/Mac:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
@@ -57,21 +81,31 @@ pip install -r requirements.txt
 
 Create a `.env` file from the template:
 
+**Windows:**
 ```bash
 copy .env.example .env
 ```
 
-Edit `.env` and add your API keys:
+**Linux/Mac:**
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your settings:
 
 ```env
-# Replit API Configuration
-REPLIT_API_URL=https://your-replit-app.com/api
-REPLIT_API_KEY=your_api_key_here
+# Replit WholesaleHub Configuration
+REPLIT_API_URL=https://warnergears.replit.app
+REPLIT_EMAIL=your_admin_email@example.com
+REPLIT_PASSWORD=your_password
 
-# Image Source APIs
-UNSPLASH_ACCESS_KEY=your_unsplash_access_key
-PEXELS_API_KEY=your_pexels_api_key
-PIXABAY_API_KEY=your_pixabay_api_key
+# Local Images (recommended - comment out to use API search)
+LOCAL_IMAGES_FOLDER=./images
+
+# Image Source APIs (only needed if NOT using local images)
+# FREEPIK_API_KEY=your_freepik_api_key
+# PEXELS_API_KEY=your_pexels_api_key
+# PIXABAY_API_KEY=your_pixabay_api_key
 
 # Application Settings
 LOG_LEVEL=INFO
@@ -85,11 +119,73 @@ SCHEDULE_ENABLED=true
 SCHEDULE_INTERVAL_HOURS=6
 ```
 
-### 5. Initialize Database
+### 5. Create Necessary Folders
 
 ```bash
-python scripts\setup_db.py
+mkdir images data logs reports
 ```
+
+### 6. Initialize Database
+
+**Windows:**
+```bash
+set PYTHONPATH=.
+venv\Scripts\python scripts\setup_db.py
+```
+
+**Linux/Mac:**
+```bash
+PYTHONPATH=. venv/bin/python scripts/setup_db.py
+```
+
+## Quick Start - Local Images Mode
+
+### 1. Add Product Images
+
+Place images in `./images/` folder with filename = SKU code:
+
+```
+images/
+├── 005692548366.jpg
+├── 5056716406853.png
+├── 687498456177.png
+└── ...
+```
+
+**Rules:**
+- Filename (without extension) = SKU code
+- Supported: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`
+- Minimum: 400x400 pixels
+- Maximum: 5MB
+
+### 2. Create SKU List File
+
+Create `my_skus.txt` with SKU codes (one per line):
+
+```
+005692548366
+5056716406853
+687498456177
+```
+
+### 3. Run the Bot
+
+**Windows:**
+```bash
+venv\Scripts\python -m src.main --run-once --sku-file my_skus.txt
+```
+
+**Linux/Mac:**
+```bash
+venv/bin/python -m src.main --run-once --sku-file my_skus.txt
+```
+
+The bot will:
+1. Match each SKU to its image file
+2. Validate images (size, format, dimensions)
+3. Upload to Replit WholesaleHub
+4. Track progress in database
+5. Skip already-processed SKUs
 
 ## Usage
 

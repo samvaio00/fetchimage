@@ -29,6 +29,9 @@ class AppConfig(BaseSettings):
     # Database
     database_path: str = Field("./data/state.db", alias="DATABASE_PATH")
 
+    # Local Images
+    local_images_folder: Optional[str] = Field(None, alias="LOCAL_IMAGES_FOLDER")
+
     # Scheduling
     schedule_enabled: bool = Field(True, alias="SCHEDULE_ENABLED")
     schedule_interval_hours: int = Field(6, alias="SCHEDULE_INTERVAL_HOURS")

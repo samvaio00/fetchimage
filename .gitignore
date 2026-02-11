@@ -58,3 +58,11 @@ Thumbs.db
 # Project specific
 *.bak
 *.tmp
+
+# Local product images (do not commit)
+images/*.jpg
+images/*.jpeg
+images/*.png
+images/*.gif
+images/*.webp
+!images/README.md

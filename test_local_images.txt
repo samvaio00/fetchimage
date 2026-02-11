@@ -1,0 +1,9 @@
+# Test SKUs for local image upload
+# These SKUs have corresponding images in ./images folder
+
+005692548366
+5056716406853
+5056716406884
+5056716407058
+687498456177
+792138345145

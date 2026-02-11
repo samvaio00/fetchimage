@@ -3,16 +3,17 @@
 
 import sys
 import click
-from utils.config import get_config
-from utils.logger import setup_logging, get_logger
-from services.sku_processor import SKUProcessor
+from src.utils.config import get_config
+from src.utils.logger import setup_logging, get_logger
+from src.services.sku_processor import SKUProcessor
 
 
 @click.command()
 @click.option("--run-once", is_flag=True, help="Run once and exit")
 @click.option("--interval", default=6, help="Interval in hours for scheduled runs")
 @click.option("--config", default="config/config.yaml", help="Path to config file")
-def main(run_once, interval, config):
+@click.option("--sku-file", default=None, help="Path to text file with SKU list (one per line)")
+def main(run_once, interval, config, sku_file):
     """Image Fetcher Bot - Autonomous SKU image attachment."""
     setup_logging()
     logger = get_logger(__name__)
@@ -25,10 +26,10 @@ def main(run_once, interval, config):
         
         if run_once:
             logger.info("Running in single-run mode")
-            run_job(cfg)
+            run_job(cfg, sku_file)
         else:
             logger.info(f"Starting scheduler (interval: {interval} hours)")
-            from scheduler.job_scheduler import start_scheduler
+            from src.scheduler.job_scheduler import start_scheduler
             start_scheduler(cfg, interval)
             
     except KeyboardInterrupt:
@@ -39,13 +40,13 @@ def main(run_once, interval, config):
         sys.exit(1)
 
 
-def run_job(cfg):
+def run_job(cfg, sku_file=None):
     """Run single image fetching job."""
     logger = get_logger(__name__)
-    
+
     try:
         processor = SKUProcessor(cfg)
-        report = processor.process_all_skus()
+        report = processor.process_all_skus(sku_file=sku_file)
         
         logger.info("="*60)
         logger.info("PROCESSING REPORT")

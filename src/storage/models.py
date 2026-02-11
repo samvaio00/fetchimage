@@ -24,6 +24,7 @@ class ImageSource(str, Enum):
     PIXABAY = "pixabay"
     WEB_SCRAPER = "web_scraper"
     MANUAL = "manual"
+    LOCAL = "local"
 
 
 class SKU(BaseModel):
