@@ -4,57 +4,16 @@
 This script bypasses the get_skus_without_images() limitation by accepting
 a manual list of SKUs to test the image search and upload functionality.
 
-Usage:
-    python scripts/test_with_manual_skus.py --skus "MEN-SHIRT-BLUE-L,LAPTOP-DELL-15IN,WIDGET-XYZ-123"
-    python scripts/test_with_manual_skus.py --file test_skus.txt
-"""
-
-import sys
-import argparse
-from pathlib import Path
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-from utils.config import Config
-from utils.logger import setup_logging
-from storage.state_manager import StateManager
-from storage.models import SKU, ProcessingStatus
-from services.sku_processor import SKUProcessor
-import logging
-
-
-def parse_arguments():
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Test the image fetcher bot with manual SKU list"
-    )
-    
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--skus",
-        type=str,
-        help="Comma-separated list of SKU IDs (e.g., 'SKU1,SKU2,SKU3')"
-    )
-    group.add_argument(
-        "--file",
-        type=str,
-        help="Path to file containing SKU IDs (one per line)"
-    )
-    
-    parser.add_argument(
-        "--limit",
-        type=int,
-        default=10,
-#!/usr/bin/env python3
-"""Test script for running the bot with a manual list of SKUs.
-
-This script bypasses the get_skus_without_images() limitation by accepting
-a manual list of SKUs to test the image search and upload functionality.
+Features:
+- Automatically skips SKUs that were already successfully processed
+- Only reprocesses failed or needs_review SKUs
+- Use --force to reprocess all SKUs regardless of previous status
 
 Usage:
-    python scripts/test_with_manual_skus.py --skus "MEN-SHIRT-BLUE-L,LAPTOP-DELL-15IN,WIDGET-XYZ-123"
+    python scripts/test_with_manual_skus.py --skus "SKU1,SKU2,SKU3"
     python scripts/test_with_manual_skus.py --file test_skus.txt
+    python scripts/test_with_manual_skus.py --file real_skus.txt --limit 100
+    python scripts/test_with_manual_skus.py --file test_skus.txt --force  # Force reprocess all
 """
 
 import sys
@@ -98,9 +57,15 @@ def parse_arguments():
     )
     
     parser.add_argument(
-        "--reset-state",
+        "--force",
         action="store_true",
-        help="Clear previous processing state before running"
+        help="Force reprocess all SKUs, even if already successful"
+    )
+    
+    parser.add_argument(
+        "--skip-check",
+        action="store_true",
+        help="Skip database check and process all SKUs (faster but may duplicate)"
     )
     
     return parser.parse_args()
@@ -119,6 +84,47 @@ def load_skus_from_file(filepath: str) -> list:
     except FileNotFoundError:
         print(f"Error: File not found: {filepath}")
         sys.exit(1)
+
+
+def filter_already_processed(sku_ids: list, state_manager: StateManager, force: bool, logger) -> tuple:
+    """Filter out SKUs that were already successfully processed.
+    
+    Args:
+        sku_ids: List of SKU IDs to check
+        state_manager: StateManager instance
+        force: If True, include all SKUs regardless of status
+        logger: Logger instance
+    
+    Returns:
+        Tuple of (skus_to_process, already_processed_count)
+    """
+    if force:
+        logger.info("Force mode enabled - will reprocess all SKUs")
+        return sku_ids, 0
+    
+    skus_to_process = []
+    already_successful = 0
+    
+    for sku_id in sku_ids:
+        record = state_manager.get_processing_record(sku_id)
+        
+        if record is None:
+            # Never processed before
+            skus_to_process.append(sku_id)
+        elif record.status == ProcessingStatus.SUCCESS:
+            # Already successfully processed - skip
+            already_successful += 1
+            logger.debug(f"Skipping {sku_id} - already processed successfully")
+        else:
+            # Failed or needs review - retry
+            skus_to_process.append(sku_id)
+            logger.debug(f"Will retry {sku_id} - previous status: {record.status.value}")
+    
+    if already_successful > 0:
+        logger.info(f"Skipping {already_successful} SKUs that were already processed successfully")
+        logger.info(f"Processing {len(skus_to_process)} SKUs (new + failed + needs_review)")
+    
+    return skus_to_process, already_successful
 
 
 def main():
@@ -142,44 +148,55 @@ def main():
     
     # Parse SKU list
     if args.skus:
-        sku_ids = [sku.strip() for sku in args.skus.split(',')]
+        all_sku_ids = [sku.strip() for sku in args.skus.split(',')]
     else:
-        sku_ids = load_skus_from_file(args.file)
+        all_sku_ids = load_skus_from_file(args.file)
     
-    # Apply limit
-    sku_ids = sku_ids[:args.limit]
+    logger.info(f"Loaded {len(all_sku_ids)} SKUs from input")
     
-    logger.info(f"Testing with {len(sku_ids)} SKUs: {', '.join(sku_ids)}")
-    
-    # Reset state if requested
-    if args.reset_state:
-        logger.warning("Resetting processing state...")
+    # Filter already processed SKUs (unless --skip-check or --force)
+    if args.skip_check:
+        logger.info("Skipping database check - processing all SKUs")
+        sku_ids_to_process = all_sku_ids[:args.limit]
+        skipped_count = 0
+    else:
         state_manager = StateManager(config)
-        for sku_id in sku_ids:
-            # Delete from database if exists
-            conn = state_manager._get_connection()
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM processed_skus WHERE sku_id = ?", (sku_id,))
-            conn.commit()
-            conn.close()
-        logger.info("State reset complete")
+        sku_ids_to_process, skipped_count = filter_already_processed(
+            all_sku_ids, 
+            state_manager, 
+            args.force, 
+            logger
+        )
+        # Apply limit AFTER filtering
+        sku_ids_to_process = sku_ids_to_process[:args.limit]
     
-    # Create fake SKU objects (we don't have product names from Replit yet)
-    # The bot will use the SKU ID itself to extract keywords
+    if not sku_ids_to_process:
+        print("\n" + "="*60)
+        print("✅ ALL SKUs ALREADY PROCESSED!")
+        print("="*60)
+        print(f"All {len(all_sku_ids)} SKUs have been successfully processed.")
+        print("Use --force to reprocess them anyway.")
+        print("="*60)
+        return
+    
+    # Create SKU objects
     test_skus = [
         SKU(
             id=sku_id,
             sku=sku_id,
-            name=f"Product {sku_id}",  # Placeholder name
+            name=f"Product {sku_id}",  # Placeholder - will use SKU for keyword extraction
             description=None
         )
-        for sku_id in sku_ids
+        for sku_id in sku_ids_to_process
     ]
     
     # Run the processor
     print("\n" + "="*60)
     print("STARTING TEST RUN")
     print("="*60)
+    print(f"Total SKUs in file: {len(all_sku_ids)}")
+    if skipped_count > 0:
+        print(f"Already processed: {skipped_count}")
     print(f"SKUs to process: {len(test_skus)}")
     print(f"Image sources: Unsplash → Pexels → Pixabay")
     print("="*60 + "\n")
@@ -187,28 +204,51 @@ def main():
     try:
         processor = SKUProcessor(config)
         
+        success_count = 0
+        failed_count = 0
+        needs_review_count = 0
+        
         # Process each SKU individually for better visibility
-        for sku in test_skus:
+        for i, sku in enumerate(test_skus, 1):
             logger.info(f"\n{'='*60}")
-            logger.info(f"Processing SKU: {sku.sku}")
+            logger.info(f"Processing SKU {i}/{len(test_skus)}: {sku.sku}")
             logger.info(f"{'='*60}")
             
             result = processor.process_single_sku(sku)
             
             if result.success:
+                success_count += 1
                 logger.info(f"✅ SUCCESS: Image attached for {sku.sku}")
                 logger.info(f"   Source: {result.image_source}")
                 logger.info(f"   Relevance: {result.relevance_score:.2f}")
+            elif result.error and "No suitable image found" in result.error:
+                needs_review_count += 1
+                logger.warning(f"⚠️  NEEDS REVIEW: {sku.sku}")
+                logger.warning(f"   No suitable image found")
             else:
+                failed_count += 1
                 logger.error(f"❌ FAILED: {sku.sku}")
                 logger.error(f"   Error: {result.error}")
         
+        # Print summary
         print("\n" + "="*60)
         print("TEST RUN COMPLETE")
         print("="*60)
-        print(f"Check logs/app.log for detailed output")
+        print(f"Total in file: {len(all_sku_ids)}")
+        if skipped_count > 0:
+            print(f"Already processed (skipped): {skipped_count}")
+        print(f"Attempted this run: {len(test_skus)}")
+        print(f"✅ Successful: {success_count}")
+        print(f"❌ Failed: {failed_count}")
+        print(f"⚠️  Needs Review: {needs_review_count}")
+        if len(test_skus) > 0:
+            success_rate = (success_count / len(test_skus)) * 100
+            print(f"Success Rate: {success_rate:.1f}%")
+        print("="*60)
+        print(f"\nCheck logs/app.log for detailed output")
         print(f"Check data/state.db for processing records")
-        print(f"Check reports/ folder for any SKUs needing review")
+        if needs_review_count > 0:
+            print(f"Check reports/ folder for SKUs needing review")
         print("="*60)
         
     except Exception as e:
