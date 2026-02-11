@@ -1,0 +1,15 @@
+# Sample SKU list for testing
+# Add your actual SKUs from WholesaleHub here (one per line)
+# Lines starting with # are ignored
+
+# Example SKUs (replace these with real ones from your Replit app):
+MEN-SHIRT-BLUE-LARGE
+WOMEN-DRESS-RED-MEDIUM
+LAPTOP-DELL-INSPIRON-15
+PHONE-CASE-IPHONE-14
+HEADPHONES-WIRELESS-BLACK
+BACKPACK-TRAVEL-GREY
+SHOES-RUNNING-NIKE-SIZE-10
+WATCH-DIGITAL-SPORTS
+SUNGLASSES-AVIATOR-GOLD
+CAMERA-CANON-EOS-M50
