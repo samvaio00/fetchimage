@@ -1,0 +1,73 @@
+app:
+  name: "Image Fetcher Bot"
+  version: "1.0.0"
+  batch_size: 50
+
+scheduler:
+  enabled: true
+  timezone: "UTC"
+  interval:
+    hours: 6
+  missed_execution_grace_time: 3600
+
+image_search:
+  sources:
+    unsplash: 1
+    pexels: 2
+    pixabay: 3
+    web_scraper: 4
+  
+  unsplash:
+    results_per_query: 5
+    orientation: "landscape"
+    
+  pexels:
+    results_per_query: 5
+    size: "medium"
+    
+  pixabay:
+    results_per_query: 5
+    image_type: "photo"
+    
+  minimum_relevance_score: 0.6
+  
+  validation:
+    min_width: 800
+    min_height: 600
+    max_file_size_mb: 5
+    allowed_formats: ["JPEG", "PNG", "WebP"]
+    min_aspect_ratio: 0.5
+    max_aspect_ratio: 2.0
+
+keywords:
+  min_length: 3
+  max_keywords: 5
+  remove_numbers: false
+  expand_abbreviations: true
+
+rate_limits:
+  unsplash: 50
+  pexels: 200
+  pixabay: 100
+  replit: 100
+
+retry:
+  max_attempts: 3
+  base_delay: 2
+  max_delay: 60
+  exponential_base: 2
+
+state:
+  retention_days: 30
+  failed_retry_limit: 3
+
+logging:
+  level: "INFO"
+  format: "json"
+  file:
+    enabled: true
+    path: "./logs/app.log"
+    max_bytes: 10485760
+    backup_count: 5
+  console:
+    enabled: true
