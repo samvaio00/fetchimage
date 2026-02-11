@@ -18,7 +18,7 @@ class AppConfig(BaseSettings):
     replit_password: str = Field(..., alias="REPLIT_PASSWORD")
 
     # Image Source APIs
-    unsplash_access_key: Optional[str] = Field(None, alias="UNSPLASH_ACCESS_KEY")
+    freepik_api_key: Optional[str] = Field(None, alias="FREEPIK_API_KEY")
     pexels_api_key: Optional[str] = Field(None, alias="PEXELS_API_KEY")
     pixabay_api_key: Optional[str] = Field(None, alias="PIXABAY_API_KEY")
 
@@ -146,13 +146,13 @@ class Config:
         """Get API key for a specific source.
 
         Args:
-            source: Image source name (unsplash, pexels, pixabay)
+            source: Image source name (freepik, pexels, pixabay)
 
         Returns:
             API key or None if not configured
         """
         source_mapping = {
-            "unsplash": self.env.unsplash_access_key,
+            "freepik": self.env.freepik_api_key,
             "pexels": self.env.pexels_api_key,
             "pixabay": self.env.pixabay_api_key,
         }

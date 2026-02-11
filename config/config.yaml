@@ -12,19 +12,19 @@ scheduler:
 
 image_search:
   sources:
-    unsplash: 1
+    freepik: 1
     pexels: 2
     pixabay: 3
     web_scraper: 4
-  
-  unsplash:
+
+  freepik:
     results_per_query: 5
-    orientation: "landscape"
-    
+    content_type: "photo"
+
   pexels:
     results_per_query: 5
     size: "medium"
-    
+
   pixabay:
     results_per_query: 5
     image_type: "photo"
@@ -46,7 +46,7 @@ keywords:
   expand_abbreviations: true
 
 rate_limits:
-  unsplash: 50
+  freepik: 100
   pexels: 200
   pixabay: 100
   replit: 100

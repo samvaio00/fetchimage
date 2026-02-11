@@ -19,7 +19,7 @@ class ProcessingStatus(str, Enum):
 class ImageSource(str, Enum):
     """Image source types."""
 
-    UNSPLASH = "unsplash"
+    FREEPIK = "freepik"
     PEXELS = "pexels"
     PIXABAY = "pixabay"
     WEB_SCRAPER = "web_scraper"

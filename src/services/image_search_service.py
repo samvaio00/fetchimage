@@ -1,7 +1,7 @@
 """Multi-source image search with relevance scoring."""
 
 from typing import List, Optional
-from ..api.unsplash_client import UnsplashClient
+from ..api.freepik_client import FreepikClient
 from ..api.pexels_client import PexelsClient
 from ..api.pixabay_client import PixabayClient
 from ..storage.models import ImageResult, ImageSource
@@ -18,8 +18,8 @@ class ImageSearchService(LoggerMixin):
         self.minimum_score = config.minimum_relevance_score
         
         self.clients = {}
-        if config.is_source_enabled("unsplash"):
-            self.clients[ImageSource.UNSPLASH] = UnsplashClient(config.get_api_key("unsplash"))
+        if config.is_source_enabled("freepik"):
+            self.clients[ImageSource.FREEPIK] = FreepikClient(config.get_api_key("freepik"))
         if config.is_source_enabled("pexels"):
             self.clients[ImageSource.PEXELS] = PexelsClient(config.get_api_key("pexels"))
         if config.is_source_enabled("pixabay"):
@@ -93,7 +93,7 @@ class ImageSearchService(LoggerMixin):
         elif image.width >= 1280 and image.height >= 720:
             score += 0.1
         
-        source_scores = {"unsplash": 0.2, "pexels": 0.15, "pixabay": 0.1}
+        source_scores = {"freepik": 0.2, "pexels": 0.15, "pixabay": 0.1}
         score += source_scores.get(image.source.value, 0.05)
         
         return min(score, 1.0)
