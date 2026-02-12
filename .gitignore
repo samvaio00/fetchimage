@@ -59,6 +59,16 @@ Thumbs.db
 *.bak
 *.tmp
 
+# Distribution packages (use GitHub Releases instead)
+releases/
+*.zip
+*.tar.gz
+*.dmg
+*.pkg
+
+# PyInstaller
+*.spec
+
 # Local product images (do not commit)
 images/*.jpg
 images/*.jpeg
